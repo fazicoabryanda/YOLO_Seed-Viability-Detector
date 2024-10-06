@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOLOv10 Object Detection</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+            margin: 0;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .upload-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .image-container {
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 45%;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .image-container img {
+            max-width: 100%;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+        }
+        .image-container img:hover {
+            transform: scale(1.05);
+        }
+        .count-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .count-container p {
+            font-size: 18px;
+            color: #333;
+        }
+        .loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #4CAF50;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #result-section {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Seed Viability Detector</h1>
+
+    <div class="upload-section">
+        <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" id="file-input" required>
+            <input type="submit" value="Upload">
+        </form>
+        <div class="loader" id="loading-spinner"></div>
+    </div>
+
+    <div id="result-section">
+        <div class="container">
+            <div class="image-container">
+                <h2>Original Image:</h2>
+                <img id="original-image" src="" alt="Original Image">
+            </div>
+            <div class="image-container">
+                <h2>Result Image:</h2>
+                <img id="result-image" src="" alt="Result Image">
+            </div>
+        </div>
+
+        <div class="count-container">
+            <h3>Counting Results:</h3>
+            <p><strong>Viable Seeds:</strong> <span id="viable-count"></span></p>
+            <p><strong>Non-Viable Seeds:</strong> <span id="nonviable-count"></span></p>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('upload-form');
+        const spinner = document.getElementById('loading-spinner');
+        const resultSection = document.getElementById('result-section');
+        const originalImage = document.getElementById('original-image');
+        const resultImage = document.getElementById('result-image');
+        const viableCount = document.getElementById('viable-count');
+        const nonviableCount = document.getElementById('nonviable-count');
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            spinner.style.display = 'block';
+            resultSection.style.display = 'none';
+            
+            const formData = new FormData(form);
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                spinner.style.display = 'none';
+                resultSection.style.display = 'block';
+
+                // Set image sources
+                originalImage.src = `/static/uploads/${data.uploaded_image}`;
+                resultImage.src = `/static/uploads/${data.result_image}`;
+
+                // Set counts
+                viableCount.textContent = data.viable_count;
+                nonviableCount.textContent = data.non_viable_count;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                spinner.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>
